@@ -62,6 +62,7 @@ __RCSID("$NetBSD: mv.c,v 1.44 2015/03/02 03:17:24 enami Exp $");
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include "../common/common.h"
 
 #include "pathnames.h"
 
@@ -173,13 +174,12 @@ do_move(char *from, char *to)
 		int ask = 1;
 		int ch;
 
-		if (iflg) {
-			if (access(from, F_OK)) {
-				warn("rename %s", from);
-				return (1);
-			}
-			(void)fprintf(stderr, "overwrite %s? ", to);
-		} else if (stdin_ok && access(to, W_OK) && !stat(to, &sb)) {
+        if (iflg) {
+            if (access(from, F_OK)) {
+                warn("rename %s", from);
+                return (1);
+            }
+        } else if (stdin_ok && access(to, W_OK) && !stat(to, &sb)) {
 			if (access(from, F_OK)) {
 				warn("rename %s", from);
 				return (1);
@@ -191,15 +191,10 @@ do_move(char *from, char *to)
 			    group_from_gid(sb.st_gid, 0), to);
 		} else
 			ask = 0;
-		if (ask) {
-			if ((ch = getchar()) != EOF && ch != '\n') {
-				int ch2;
-				while ((ch2 = getchar()) != EOF && ch2 != '\n')
-					continue;
-			}
-			if (ch != 'y' && ch != 'Y')
-				return (0);
-		}
+        if (ask) {
+            if (!prompt_overwrite(to))
+                return (0);
+        }
 	}
 
 	/*

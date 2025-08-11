@@ -55,6 +55,7 @@ __RCSID("$NetBSD: utils.c,v 1.44 2015/03/03 00:20:38 enami Exp $");
 #include <unistd.h>
 
 #include "extern.h"
+#include "../common/common.h"
 
 #define	MMAP_MAX_SIZE	(8 * 1048576)
 #define	MMAP_MAX_WRITE	(64 * 1024)
@@ -120,16 +121,12 @@ copy_file(FTSENT *entp, int dne)
 		struct stat sb;
 		int sval;
 
-		if (iflag) {
-			(void)fprintf(stderr, "overwrite %s? ", to.p_path);
-			checkch = ch = getchar();
-			while (ch != '\n' && ch != EOF)
-				ch = getchar();
-			if (checkch != 'y' && checkch != 'Y') {
-				(void)close(from_fd);
-				return (0);
-			}
-		}
+        if (iflag) {
+            if (!prompt_overwrite(to.p_path)) {
+                (void)close(from_fd);
+                return (0);
+            }
+        }
 
 		sval = tolnk ?
 			lstat(to.p_path, &sb) : stat(to.p_path, &sb);

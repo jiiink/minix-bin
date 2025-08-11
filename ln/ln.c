@@ -53,6 +53,7 @@ __RCSID("$NetBSD: ln.c,v 1.35 2011/08/29 14:38:30 joerg Exp $");
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include "../common/common.h"
 
 static int	fflag;				/* Unlink existing files. */
 static int	hflag;				/* Check new name for symlink first. */
@@ -189,19 +190,13 @@ linkit(const char *target, const char *source, int isdir)
 			warn("%s", source);
 			return (1);
 		}
-	} else if (iflag && exists) {
-		fflush(stdout);
-		(void)fprintf(stderr, "replace %s? ", source);
+    } else if (iflag && exists) {
+        if (!prompt_replace(source)) {
+            (void)fprintf(stderr, "not replaced\n");
+            return (1);
+        }
 
-		first = ch = getchar();
-		while (ch != '\n' && ch != EOF)
-			ch = getchar();
-		if (first != 'y' && first != 'Y') {
-			(void)fprintf(stderr, "not replaced\n");
-			return (1);
-		}
-
-		if (unlink(source)) {
+        if (unlink(source)) {
 			warn("%s", source);
 			return (1);
 		}
